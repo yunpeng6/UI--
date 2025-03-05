@@ -1,9 +1,11 @@
 import cv2
 import numpy as np
 import math
-import paddle.fluid as fluid
+import paddle
 import dbnet_crnn.tools.utility as utility
 from dbnet_crnn.ppocr.utils.character import CharacterOps
+import paddle.inference as paddle_infer  # 导入 paddle.inference 模块
+
 
 
 class TextRecognizer(object):
@@ -163,18 +165,15 @@ class TextRecognizer(object):
             if self.loss_type == "srn":
                 encoder_word_pos_list = np.concatenate(encoder_word_pos_list)
                 gsrm_word_pos_list = np.concatenate(gsrm_word_pos_list)
-                gsrm_slf_attn_bias1_list = np.concatenate(
-                    gsrm_slf_attn_bias1_list)
-                gsrm_slf_attn_bias2_list = np.concatenate(
-                    gsrm_slf_attn_bias2_list)
-                norm_img_batch = fluid.core.PaddleTensor(norm_img_batch)
-                encoder_word_pos_list = fluid.core.PaddleTensor(
-                    encoder_word_pos_list)
-                gsrm_word_pos_list = fluid.core.PaddleTensor(gsrm_word_pos_list)
-                gsrm_slf_attn_bias1_list = fluid.core.PaddleTensor(
-                    gsrm_slf_attn_bias1_list)
-                gsrm_slf_attn_bias2_list = fluid.core.PaddleTensor(
-                    gsrm_slf_attn_bias2_list)
+                gsrm_slf_attn_bias1_list = np.concatenate(gsrm_slf_attn_bias1_list)
+                gsrm_slf_attn_bias2_list = np.concatenate(gsrm_slf_attn_bias2_list)
+
+                # 使用 paddle.inference.Tensor 替换 fluid.core.PaddleTensor
+                norm_img_batch = paddle_infer.Tensor(norm_img_batch)
+                encoder_word_pos_list = paddle_infer.Tensor(encoder_word_pos_list)
+                gsrm_word_pos_list = paddle_infer.Tensor(gsrm_word_pos_list)
+                gsrm_slf_attn_bias1_list = paddle_infer.Tensor(gsrm_slf_attn_bias1_list)
+                gsrm_slf_attn_bias2_list = paddle_infer.Tensor(gsrm_slf_attn_bias2_list)
 
                 inputs = [
                     norm_img_batch, encoder_word_pos_list,
@@ -188,7 +187,8 @@ class TextRecognizer(object):
                     self.input_tensor.copy_from_cpu(norm_img_batch)
                     self.predictor.zero_copy_run()
                 else:
-                    norm_img_batch = fluid.core.PaddleTensor(norm_img_batch)
+                    # 使用 paddle.inference.Tensor 替换 fluid.core.PaddleTensor
+                    norm_img_batch = paddle_infer.Tensor(norm_img_batch)
                     self.predictor.run([norm_img_batch])
 
             if self.loss_type == "ctc":
@@ -218,8 +218,7 @@ class TextRecognizer(object):
                 preds = rec_idx_batch.reshape(-1)
                 total_preds = preds.copy()
                 for ino in range(int(len(rec_idx_batch) / self.text_len)):
-                    preds = total_preds[ino * self.text_len:(ino + 1) *
-                                        self.text_len]
+                    preds = total_preds[ino * self.text_len:(ino + 1) * self.text_len]
                     ind = np.argmax(probs, axis=1)
                     valid_ind = np.where(preds != int(char_num - 1))[0]
                     if len(valid_ind) == 0:
@@ -227,7 +226,6 @@ class TextRecognizer(object):
                     score = np.mean(probs[valid_ind, ind[valid_ind]])
                     preds = preds[:valid_ind[-1] + 1]
                     preds_text = self.char_ops.decode(preds)
-
                     rec_res[indices[beg_img_no + ino]] = [preds_text, score]
             else:
                 rec_idx_batch = self.output_tensors[0].copy_to_cpu()
@@ -242,4 +240,4 @@ class TextRecognizer(object):
                         score = np.mean(predict_batch[rno, 1:end_pos[1]])
                     preds_text = self.char_ops.decode(preds)
                     rec_res[indices[beg_img_no + rno]] = [preds_text, score]
-        return rec_res
+            return rec_res

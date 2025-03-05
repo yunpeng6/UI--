@@ -1,6 +1,11 @@
 import cv2
+import sys
+sys.path.append('../')
 from service.image_similar import HashSimilar
 from service.image_utils import get_hash_score, m_diff
+from image_similar import HashSimilar
+
+
 
 
 class LineFeatureEqual(object):
@@ -158,6 +163,8 @@ class ImageDiff(object):
         for point in points:
             cv2.circle(img_show, (point[0], point[1]), 1, (0, 0, 255), -1)
         cv2.imwrite(image_show, img_show)
+        # 打印生成的文件路径
+        print(f"Generated file: {image_show}")
         return len(points)
 
     def get_image_score(self, image1, image2, image_diff_name):
@@ -167,4 +174,25 @@ class ImageDiff(object):
                 points_size = self.increment_diff('capture/'+image1, 'capture/'+image2, 'capture/'+image_diff_name)
                 if points_size < 50:
                     score = 1.0
+        print(f"Final score: {score}")
         return score
+
+# 示例代码：使用 ImageDiff 类及其 increment_diff 方法
+if __name__ == "__main__":
+    # 创建 ImageDiff 对象
+    img = ImageDiff()
+
+    # 调用 increment_diff 方法，传入两个输入图像路径和一个输出图像路径
+    print(img.increment_diff("/Users/maoyan/Documents/vision-ui/capture/image_1.png", "/Users/maoyan/Documents/vision-ui/capture/image_2.png", "capture/output_img.png"))
+    output_image = cv2.imread("capture/output_img.png")
+    if output_image is not None:
+        # 显示图像
+        cv2.imshow("Output Image", output_image)
+        cv2.waitKey(0)  # 等待用户按键
+        cv2.destroyAllWindows()  # 关闭所有 OpenCV 窗口
+    else:
+        print("无法读取 capture/output_img.png 文件。请确保文件已正确生成。")
+
+    score = HashSimilar.get_image_score("/Users/maoyan/Documents/vision-ui/capture/image_1.png", "/Users/maoyan/Documents/vision-ui/capture/image_2.png")
+    print(score)
+

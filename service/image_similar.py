@@ -104,3 +104,11 @@ class HashSimilar(object):
         hash2 = HashSimilar.perception_hash(img2)
         score = 1 - HashSimilar.hamming_dist(hash1, hash2) * 1.0 / (64 * 64)
         return score
+
+    @classmethod
+    def get_similar(cls, param, param1):
+        pass
+
+    @classmethod
+    def get_image_score(cls, param, param1):
+        pass

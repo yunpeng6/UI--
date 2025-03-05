@@ -7,6 +7,12 @@ import time
 from config import IMAGE_INFER_MODEL_PATH, OP_NUM_THREADS
 from service.image_utils import yolox_preprocess, yolox_postprocess, multiclass_nms, img_show
 
+# 修改模型路径为修正后的模型路径
+IMAGE_INFER_MODEL_PATH = '/Users/maoyan/Documents/vision-ui/capture/local_models/ui_det_v2.onnx'
+
+# 检查模型文件是否存在
+if not os.path.exists(IMAGE_INFER_MODEL_PATH):
+    raise FileNotFoundError(f"Model file not found at {IMAGE_INFER_MODEL_PATH}")
 
 class ImageInfer(object):
     def __init__(self, model_path):

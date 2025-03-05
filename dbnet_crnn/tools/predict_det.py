@@ -1,29 +1,39 @@
 import numpy as np
 import sys
-import paddle.fluid as fluid
+import paddle
 import dbnet_crnn.tools.utility as utility
 from dbnet_crnn.ppocr.db_process import DBProcessTest
 from dbnet_crnn.ppocr.db_post_process import DBPostProcess
-
+from paddle.inference import AnalysisConfig
+import paddle.inference as paddle_infer
 
 class TextDetector(object):
     def __init__(self, args, model_path):
-        self.det_algorithm = args['det_algorithm']
-        self.use_zero_copy_run = args['use_zero_copy_run']
+        self.det_algorithm = args['det_algorithm']  # 修改为字典访问方式
+        self.use_zero_copy_run = args['use_zero_copy_run']  # 修改为字典访问方式
         postprocess_params = {}
         if self.det_algorithm == "DB":
             self.preprocess_op = DBProcessTest()
-            postprocess_params["thresh"] = args['det_db_thresh']
-            postprocess_params["box_thresh"] = args['det_db_box_thresh']
-            postprocess_params["max_candidates"] = 3000
-            postprocess_params["unclip_ratio"] = args['det_db_unclip_ratio']
+            postprocess_params["thresh"] = args['det_db_thresh']  # 修改为字典访问方式
+            postprocess_params["box_thresh"] = args['det_db_box_thresh']  # 修改为字典访问方式
+            postprocess_params["max_candidates"] = 3000  # 保持不变
+            postprocess_params["unclip_ratio"] = args['det_db_unclip_ratio']  # 修改为字典访问方式
             self.postprocess_op = DBPostProcess(postprocess_params)
         else:
             print("unknown det_algorithm:{}".format(self.det_algorithm))
             sys.exit(0)
 
+        # 创建 AnalysisConfig 对象
+        self.analysis_config = AnalysisConfig()
+        self.analysis_config.set_model(model_path)  # 使用 set_model 方法设置模型路径
+        # 修改为使用 enable_gpu 方法来启用 GPU
+        self.analysis_config.enable_gpu(100, 0)
+        self.analysis_config.switch_use_feed_fetch_ops(False)
+        self.analysis_config.switch_specify_input_names(True)
+
         self.predictor, self.input_tensor, self.output_tensors =\
             utility.create_predictor(args, mode="det", model_path=model_path)
+        model_path = '/Users/maoyan/Documents/vision-ui/dbnet_crnn/modelv1.1/det'
 
     def order_points_clockwise(self, pts):
         """
@@ -88,7 +98,7 @@ class TextDetector(object):
             self.input_tensor.copy_from_cpu(im)
             self.predictor.zero_copy_run()
         else:
-            im = fluid.core.PaddleTensor(im)
+            im = paddle_infer.Tensor(im)
             self.predictor.run([im])
         outputs = []
         for output_tensor in self.output_tensors:
@@ -110,3 +120,6 @@ class TextDetector(object):
         dt_boxes = dt_boxes_list[0]
         dt_boxes = self.filter_tag_det_res(dt_boxes, ori_im.shape)
         return dt_boxes
+
+
+
