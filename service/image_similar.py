@@ -20,6 +20,8 @@ class HashSimilar(object):
         get image in numpy shape
         """
         img = cv2.imread(img_file)
+        if img is None:
+            raise ValueError(f"Unable to read image from file: {img_file}")
         h, w, _ = img.shape
         img = img[int(w * 0.078):, :, :]
         img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)

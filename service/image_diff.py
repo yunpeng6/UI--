@@ -1,5 +1,6 @@
 import cv2
 import sys
+import os
 sys.path.append('../')
 from service.image_similar import HashSimilar
 from service.image_utils import get_hash_score, m_diff
@@ -179,20 +180,33 @@ class ImageDiff(object):
 
 # 示例代码：使用 ImageDiff 类及其 increment_diff 方法
 if __name__ == "__main__":
-    # 创建 ImageDiff 对象
-    img = ImageDiff()
+    if __name__ == "__main__":
+        # 确保 capture 目录存在
+        capture_dir = "capture"
+        if not os.path.exists(capture_dir):
+            os.makedirs(capture_dir)
+            print(f"创建目录: {capture_dir}")
 
-    # 调用 increment_diff 方法，传入两个输入图像路径和一个输出图像路径
-    print(img.increment_diff("/Users/maoyan/Documents/vision-ui/capture/image_1.png", "/Users/maoyan/Documents/vision-ui/capture/image_2.png", "capture/output_img.png"))
-    output_image = cv2.imread("capture/output_img.png")
-    if output_image is not None:
-        # 显示图像
-        cv2.imshow("Output Image", output_image)
-        cv2.waitKey(0)  # 等待用户按键
-        cv2.destroyAllWindows()  # 关闭所有 OpenCV 窗口
-    else:
-        print("无法读取 capture/output_img.png 文件。请确保文件已正确生成。")
+        img = ImageDiff()
+        print(img.increment_diff("/Users/maoyan/Documents/vision-ui/capture/image_1.png",
+                                 "/Users/maoyan/Documents/vision-ui/capture/image_16.jpg", "/Users/maoyan/Documents/vision-ui/service/capture/output_img.jpg"))
 
-    score = HashSimilar.get_image_score("/Users/maoyan/Documents/vision-ui/capture/image_1.png", "/Users/maoyan/Documents/vision-ui/capture/image_2.png")
-    print(score)
+        # 检查文件是否存在
+        # output_path路径 = "/Users/maoyan/Documents/vision-ui/service/capture/output_img.jpg"
+        output_path = "/Users/maoyan/Documents/vision-ui/service/capture/output_img.jpg"
+        if os.path.exists(output_path):
+            output_image = cv2.imread(output_path)
+            if output_image is not None:
+                # 显示图像
+                cv2.imshow("Output Image", output_image)
+                cv2.waitKey(0)  # 按esc退出
+                cv2.destroyAllWindows()  # 关闭所有 OpenCV 窗口
+            else:
+                print(f"无法读取 {output_path} 文件。请确保文件格式正确。")
+        else:
+            print(f"文件不存在: {output_path}")
+
+        score = HashSimilar.get_attention_similar("/Users/maoyan/Documents/vision-ui/capture/image_1.png", "/Users/maoyan/Documents/vision-ui/capture/image_16.jpg")
+        print(score)
+
 
