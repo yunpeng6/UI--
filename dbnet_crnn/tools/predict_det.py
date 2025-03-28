@@ -6,9 +6,16 @@ from dbnet_crnn.ppocr.db_process import DBProcessTest
 from dbnet_crnn.ppocr.db_post_process import DBPostProcess
 from paddle.inference import AnalysisConfig
 import paddle.inference as paddle_infer
+import os
+from . import utility
+import os
+from . import utility
 
-class TextDetector(object):
-    def __init__(self, args, model_path):
+class TextDetector:
+    def __init__(self, args, model_path='/Users/maoyan/Documents/vision-ui/dbnet_crnn/modelv1.1/det'):
+        # 确保路径拼接正确
+        model_path = os.path.abspath(model_path)
+        utility.create_predictor(args, mode="det", model_path=model_path)
         self.det_algorithm = args['det_algorithm']  # 修改为字典访问方式
         self.use_zero_copy_run = args['use_zero_copy_run']  # 修改为字典访问方式
         postprocess_params = {}

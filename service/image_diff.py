@@ -4,7 +4,7 @@ import os
 sys.path.append('../')
 from service.image_similar import HashSimilar
 from service.image_utils import get_hash_score, m_diff
-from image_similar import HashSimilar
+from service.image_similar import HashSimilar
 
 
 
@@ -188,8 +188,8 @@ if __name__ == "__main__":
             print(f"创建目录: {capture_dir}")
 
         img = ImageDiff()
-        print(img.increment_diff("/Users/maoyan/Documents/vision-ui/capture/image_1.png",
-                                 "/Users/maoyan/Documents/vision-ui/capture/image_16.jpg", "/Users/maoyan/Documents/vision-ui/service/capture/output_img.jpg"))
+        print(img.increment_diff("/Users/maoyan/Documents/vision-ui/capture/image_11.jpg",
+                                 "/Users/maoyan/Documents/vision-ui/capture/image_12.jpg", "/Users/maoyan/Documents/vision-ui/service/capture/output_img.jpg"))
 
         # 检查文件是否存在
         # output_path路径 = "/Users/maoyan/Documents/vision-ui/service/capture/output_img.jpg"
@@ -206,7 +206,7 @@ if __name__ == "__main__":
         else:
             print(f"文件不存在: {output_path}")
 
-        score = HashSimilar.get_attention_similar("/Users/maoyan/Documents/vision-ui/capture/image_1.png", "/Users/maoyan/Documents/vision-ui/capture/image_16.jpg")
+        score = HashSimilar.get_attention_similar("/Users/maoyan/Documents/vision-ui/capture/image_11.jpg", "/Users/maoyan/Documents/vision-ui/capture/image_12.jpg")
         print(score)
 
 

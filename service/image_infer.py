@@ -1,11 +1,13 @@
 import os.path
 import re
 import cv2
+import base64
 import numpy as np
 import onnxruntime
 import time
 from config import IMAGE_INFER_MODEL_PATH, OP_NUM_THREADS
 from service.image_utils import yolox_preprocess, yolox_postprocess, multiclass_nms, img_show
+import json
 
 # 修改模型路径为修正后的模型路径
 IMAGE_INFER_MODEL_PATH = '/Users/maoyan/Documents/vision-ui/capture/local_models/ui_det_v2.onnx'
@@ -76,13 +78,28 @@ def get_ui_infer(image, cls_thresh):
             box = box.tolist() if isinstance(box, (np.ndarray,)) else box
             elem_type = image_infer.UI_CLASSES[int(cls_inds[i])]
             score = scores[i]
-            data.append(
-                {
-                    "elem_det_type": "image" if elem_type == 'pic' else elem_type,
-                    "elem_det_region": box,
-                    "probability": score
-                }
-            )
+            # 打印 elem_type 的值
+            print(f"Element type: {elem_type}")
+            # 增加检测出的 icon 和 image 的坐标信息
+            if elem_type in ["icon", "image", "pic"]:
+                data.append(
+                    {
+                        "elem_det_type": "image" if elem_type == 'pic' else elem_type,
+                        "elem_det_region": box,
+                        "probability": score,
+                        "coordinates": box  # 增加坐标信息
+                    }
+                )
+                # 打印输出坐标信息
+                print(f"Detected {elem_type} with coordinates: {box}")
+            else:
+                data.append(
+                    {
+                        "elem_det_type": "image" if elem_type == 'pic' else elem_type,
+                        "elem_det_region": box,
+                        "probability": score
+                    }
+                )
     return data
 
 
@@ -90,9 +107,11 @@ if __name__ == '__main__':
     """
     调试代码
     """
-    image_path = "./capture/image_1.png"
+    import base64
+    image_path = "/Users/maoyan/Documents/vision-ui/capture/image_41.jpg"
     infer_result_path = "./capture/local_images"
-    assert os.path.exists(image_path)
+    if not os.path.exists(image_path):
+        raise FileNotFoundError(f"Image file not found at {image_path}")
     assert os.path.exists(IMAGE_INFER_MODEL_PATH)
     if not os.path.exists(infer_result_path):
         os.mkdir(infer_result_path)
@@ -100,5 +119,16 @@ if __name__ == '__main__':
     dets = image_infer.ui_infer(image_path)
     print(f"Infer time: {round(time.time()-t1, 3)}s")
     infer_result_name = f"infer_result.png"
-    image_infer.show_infer(dets, cv2.imread(image_path), os.path.join(infer_result_path, infer_result_name))
+    infer_result_file = os.path.join(infer_result_path, infer_result_name)
+    image_infer.show_infer(dets, cv2.imread(image_path), infer_result_file)
     print(f"Result saved {infer_result_path}/{infer_result_name}")
+
+    # 将推理结果图片转换为 base64 编码
+    image = cv2.imread(infer_result_file)
+    image_b = base64.b64encode(cv2.imencode('.png', image)[1].tobytes())
+    image_source = bytes.decode(image_b)
+    print(f"Base64 encoded image: {image_source[:50]}...")
+
+    # 调用 get_ui_infer 函数并打印结果
+    ui_infer_result = get_ui_infer(image_path, 0.5)
+    print("UI Infer Result:", json.dumps(ui_infer_result, indent=4))

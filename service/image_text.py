@@ -14,4 +14,4 @@ def get_image_text(image):
 
 
 if __name__ == '__main__':
-    print(get_image_text('image_1.png'))
+    print(get_image_text('image_41.jpg'))
